@@ -1,0 +1,205 @@
+<html>
+
+<head>
+    <title>Quarter 3-4 Game Project</title>
+    <link rel="stylesheet" href="3-4game.css" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"
+        integrity="sha512-uaz5GpnQoE6t5echKlX8P52czvsIGgLPcvlzfvRubLZ1Hp8JemUDnbUiAahbVtPb+jUVrNETuXvAhDDF/N3M4w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Includes the p5.collide2D addon library -->
+    <script defer src="https://unpkg.com/p5.collide2d"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Concert+One&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.js" integrity="sha512-TU9AWtV5uUZPX8dbBAH8NQF1tSdigPRRT82vllAQ1Ke28puiqLA6ZVKxtUGlgrH6yWFnkKy+sE6luNEGH9ar0A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+
+<body>
+
+    <!--Instruction/startup page-->
+    <div id="startup">
+        <h1 id="game-title">BLUE VS RED OLYMPICS</h1>
+        <p id = "bvrIntro">Blue VS Red Olympics is a two player - single device game. So go ahead and grab a friend to compete head to head to see who will come out on top in the Blue VS Red Olympics!</p>
+        <h2 id="clickspace">(Click Space To Continue)</h2>
+    </div>
+
+    <!--full screen direction-->
+    <p id="fs">Please<br>FULLSCREEN<br>For Best Experience</p>
+
+    <!--drop down box for user to select the game they would like to play-->
+    <div id="topbar">
+        <p id="gameselect">Game Options</p>
+        <select id="dropgames">
+            <option value="homepage">HOME PAGE</option>
+            <option value="pong">Pong</option>
+            <option value="hockey">Hockey</option>
+            <option value="1v1">1v1 Battle</option>
+            <option value="fruit">Catch the Fruit</option>
+        </select>
+        <!--button that will direct users to the game they chose-->
+        <button id="letsgo" onclick="letsgobut()">Lets Go!</button>
+    </div>
+
+    <!--Blue Players Instructions-->
+    <div id="p1instructions">
+        <p>Player 1<br>W<br>A S D<br>To Move</p>
+    </div>
+
+    <!--Red Players Instructions-->
+    <div id="p2instructions">
+        <p>Player 2<br>I<br>J K L<br>To Move</p>
+    </div>
+
+
+    <script>
+        //height and width of the page
+        let w = window.innerWidth
+        let h = window.innerHeight
+
+        //blue players starting position
+        let xb = 110
+        let yb = 200
+
+        //red players starting position
+        let xr = 1190
+        let yr = 200
+
+        //declare the unknown variables
+        let player
+        let blueplayer
+        let redplayer
+
+
+        //function that makes the startup title page clear out when space is pressed
+        function keyPressed() {
+            if (keyCode === (32)) {
+                //remove the startup title page from the body of the document when space is pressed
+                document.body.removeChild(document.getElementById('startup'))
+            }
+
+            //when any of the players move, the full screen message disappears from the body of the document
+            if (keyCode === (65) || keyCode === (68) || keyCode === (83) || keyCode === (87) || keyCode === (74) || keyCode === (75) || keyCode === (75) || keyCode === (73)) {
+                document.body.removeChild(document.getElementById('fs'))
+            }
+        }
+
+
+        //function that directs the users to the game they chose
+        function letsgobut() {
+            //get the values within the dropdown box
+            let dropDownValue = document.getElementById("dropgames").value
+            if (dropDownValue == "homepage") {
+                window.location.href = "index.html"
+            }
+
+            if (dropDownValue == "pong") {
+                window.location.href = "pong.html"
+            }
+
+            if (dropDownValue == "hockey") {
+                window.location.href = "hockey.html"
+            }
+
+            if (dropDownValue == "1v1") {
+                window.location.href = "1v1.html"
+            }
+
+            if (dropDownValue == "fruit") {
+                window.location.href = "fruit.html"
+            }
+
+        }
+
+
+        function preload() {
+            //preload background image
+            bg = loadImage('stadium.jpg')
+            //preload background music
+            backgroundMusic = loadSound('startbg.mp3')
+        }
+
+
+
+        function setup() {
+            createCanvas(w, h)
+
+            //declare the variable as a new object
+            player = new movement()
+            
+            //run the background music 
+            backgroundMusic.setVolume(0.3)
+            backgroundMusic.play()
+            backgroundMusic.loop()
+        }
+
+       
+
+
+        //function that will load the image of the characters
+        function movement() {
+            blueplayer = loadImage('blueplayer.png')
+            redplayer = loadImage('redplayer.png')
+        }
+
+
+        //function that allows user to move with WASD and IJKL
+        function draw() {
+
+
+            
+            //clear so that there is no image trail when the users move
+            clear()
+            
+    
+            //set the canvas to be the screen width and length
+            createCanvas(window.innerWidth, window.innerHeight)
+
+            //load the background image to the screen
+            background(bg)
+
+
+            //blue players movements with WASD
+            if (keyIsDown(65) && xb >= 0) {
+                xb -= 5;
+            }
+
+            if (keyIsDown(68) && xb <= w - 100) {
+                xb += 5;
+            }
+
+            if (keyIsDown(83) && yb <= h - 100) {
+                yb += 5;
+            }
+
+            if (keyIsDown(87) && yb >= 0) {
+                yb -= 5;
+            }
+
+
+
+            //red players movements with IJKL
+            if (keyIsDown(74) && xr >= 0) {
+                xr -= 5;
+            }
+
+            if (keyIsDown(76) && xr <= w - 100) {
+                xr += 5;
+            }
+
+            if (keyIsDown(75) && yr <= h - 100) {
+                yr += 5;
+            }
+
+            if (keyIsDown(73) && yr >= 0) {
+                yr -= 5;
+            }
+            
+            //load the images and its dimensions as well as how it moves with the set keys
+            image(blueplayer, xb, yb, 200, 200)
+            image(redplayer, xr, yr, 200, 200)
+            
+        }
+    </script>
+</body>
+
+</html>

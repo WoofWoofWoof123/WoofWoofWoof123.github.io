@@ -1,0 +1,371 @@
+<html>
+
+<head>
+    <title>Quarter 3-4 Game Project</title>
+    <link rel="stylesheet" href="3-4game.css" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"
+        integrity="sha512-uaz5GpnQoE6t5echKlX8P52czvsIGgLPcvlzfvRubLZ1Hp8JemUDnbUiAahbVtPb+jUVrNETuXvAhDDF/N3M4w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Includes the p5.collide2D addon library -->
+    <script defer src="https://unpkg.com/p5.collide2d"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Concert+One&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.js" integrity="sha512-TU9AWtV5uUZPX8dbBAH8NQF1tSdigPRRT82vllAQ1Ke28puiqLA6ZVKxtUGlgrH6yWFnkKy+sE6luNEGH9ar0A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+</head>
+
+<body>
+
+    <!--Game Instructions-->
+    <div id="startup">
+        <h1 id="fruit-title">CATCH THE FRUIT</h1>
+        <p id="pong-instructions">Oh no! A disaster has struck and fruit are falling from the sky! Go head to head and
+            catch as many fruit as you can.</p>
+        <p id="blue-instructions">Blue Player:<br><mark id="A" style="background: blue">Ａ</mark> = Left<br>🅳 = Right
+        </p>
+        <p id="fruitR-instructions">Red Player:<br>🅹 = Left<br>🅻 = Right</p>
+        <p id="reset">🅁 = Reset Score</p>
+        <p id = "startball">🄱 = Begin</p>
+        <h2 id="clickspace">(Click Space To Continue)</h2>
+    </div>
+
+
+    <!--drop down box for user to select the game they would like to play-->
+    <div id="topbar">
+        <p id="gameselect">Game Options</p>
+        <select id="dropgames">
+            <option value="homepage">HOME PAGE</option>
+            <option value="pong">Pong</option>
+            <option value="hockey">Hockey</option>
+            <option value="1v1">1v1 Battle</option>
+            <option value="fruit">Catch the Fruit</option>
+        </select>
+        <!--button that will direct users to the game they chose-->
+        <button id="letsgo" onclick="letsgobut()">Lets Go!</button>
+    </div>
+
+    <!--Placeholder that displays the red and blue players scores-->
+    <p id="bluePlaceholder">0</p>
+    <p id="redPlaceholder">0</p>
+
+    <script>
+        //height and width of the page
+        let w = window.innerWidth
+        let h = window.innerHeight
+
+        //blue players starting position
+        let xb = 110
+        let yb = 600
+
+        //red players starting position
+        let xr = 1190
+        let yr = 600
+
+        //declare the unknown variables
+        let player
+        let blueplayer
+        let redplayer
+
+        //blue and red players set scores
+        let blueScore = 0
+        let redScore = 0
+
+        //variable that states that the player has not begun the game
+        let start = 0
+
+
+
+
+
+        //function that directs the users to the game they chose
+        function letsgobut() {
+            //get the values within the dropdown box
+            let dropDownValue = document.getElementById("dropgames").value
+            if (dropDownValue == "homepage") {
+                window.location.href = "index.html"
+            }
+
+            if (dropDownValue == "pong") {
+                window.location.href = "pong.html"
+            }
+
+            if (dropDownValue == "hockey") {
+                window.location.href = "hockey.html"
+            }
+
+            if (dropDownValue == "1v1") {
+                window.location.href = "1v1.html"
+            }
+
+            if (dropDownValue == "fruit") {
+                window.location.href = "fruit.html"
+            }
+
+        }
+
+
+        //array of fruit
+        let array = []
+        let fruitArray = ['apple', 'banana', 'grape', 'orange', 'watermelon']
+
+
+
+        function preload() {
+            //preload background image
+            bg = loadImage('island.png')
+
+            //preload the fruit images that will be set into the array
+            array['apple'] = loadImage('fruits/apple.png')
+            array['banana'] = loadImage('fruits/banana.png')
+            array['grape'] = loadImage('fruits/grape.png')
+            array['orange'] = loadImage('fruits/orange.png')
+            array['watermelon'] = loadImage('fruits/watermelon.png')
+
+            //preload the fruit catching sound effect
+            fruitSFX = loadSound('fruit.mp3')
+        }
+
+
+
+
+        function setup() {
+            createCanvas(w, h)
+            //declare the variable as a new object
+            player = new movement()
+        }
+
+
+
+        function keyTyped() {
+            //when player presses R key, reset both players scores and HP
+            if (key == 'r') {
+                //reset the scores
+                blueScore = 0
+                redScore = 0
+                //display the reset scores
+                document.getElementById('bluePlaceholder').innerHTML = blueScore
+                document.getElementById('redPlaceholder').innerHTML = redScore
+            }
+
+            //when player presses B, the game will begin
+            if (key == 'b') {
+                start = 1
+            }
+
+        }
+
+
+
+        //function that drops tje fruit at random positions for both players
+        function fruitConstructor(part) {
+
+            //the dropper function that drops the fruit at the constant speed 
+            this.drop = function (speedFactor) {
+                    //increase the value of of the Y position by the factor of speed for vertical movement
+                    this.positionY += 1 * speedFactor
+                }
+
+                //generates the random fruit at the random posiiton
+                this.show = function () {
+                    if (this.positionX) {
+                        image(array[this.fruit], this.positionX, this.positionY, 50, 50)
+                    }
+                    
+                }
+
+
+
+            //if the user began the game by pressing B, the fruit start dropping
+            if (start == 1) {
+                //random position that the fruit will drop in for blue player
+                if (part == 'left') {
+                    this.positionX = random(0 + 200, Math.floor(w / 2) - 200)
+                    this.playerGoal = part
+                }
+
+                //random position that the fruit will drop in for red player
+                else if (part == 'right') {
+                    this.positionX = random(Math.floor(w / 2) + 200, Math.floor(w) - 200)
+                    this.playerGoal = 'right'
+                }
+
+                //set the Y position to 0
+                this.positionY = 0 - 0
+                //randomizes the fruit from the array
+                this.fruit = fruitArray[Math.floor(random(0, fruitArray.length))]
+
+                
+                
+                //detect if player has caught the fruit
+                this.detectHit = function (positionX, positionY, sizeX, sizeY) {
+                    //if the player and fruit collide (is true), add a point to their score
+                    if (collideRectRect(positionX, positionY, sizeX, sizeY, this.positionX - 25, this.positionY - 25, 50, 50) == true) {
+                        //blue players scoring
+                        if (this.playerGoal == "left") {
+                            //play the catching sound effect when the blue player has caught the fruit
+                            fruitSFX.play()
+                            //add the point to the blue player
+                            blueScore++;
+                            //display the blue players score
+                            document.getElementById("bluePlaceholder").innerText = blueScore
+                        }
+
+                        //red players scoring
+                        if (this.playerGoal == "right") {
+                            //play the catching sound effect when the red player has caught the fruit
+                            fruitSFX.play()
+                            //add the point to the red player
+                            redScore++;
+                            //display the red players score
+                            document.getElementById("redPlaceholder").innerText = redScore
+
+                        }
+
+                        //return that the fruit and player has collided
+                        return true
+
+                    }
+                }
+            }
+        }
+
+
+
+
+
+
+
+        //function that clears out the start up page when space is presed
+        function keyPressed() {
+            if (keyCode === (32)) {
+                //remove the startup title page from the body of the document
+                document.body.removeChild(document.getElementById('startup'))
+            }
+        }
+
+
+
+
+        //function that will load the image of the characters
+        function movement() {
+            blueplayer = loadImage('bluefruit.png')
+            redplayer = loadImage('redfruit.png')
+        }
+
+        //empty array for fruit being generated
+        let generatedFruit = []
+
+        //function that generates the random fruit from the fruit constructer function
+        function createFruit() {
+            //random generated fruit from function is now a variable
+            let blueFruit = new fruitConstructor("left")
+            let redFruit = new fruitConstructor("right")
+
+            //push the random generated fruit variable to the empty array
+            generatedFruit.push(blueFruit)
+            generatedFruit.push(redFruit)
+
+        }
+
+        
+        let time = 0
+        //time that last fruit was generated
+        let lastGenerated = 0
+        //the set interval that the fruit will drop
+        let interval = 3 * 1000
+        let speedFactor = 25
+
+
+
+        //function that allows user to move with WASD and IJKL
+        function draw() {
+
+            //clear so that there is no image trail when the users move
+            clear()
+
+
+            background(bg)
+
+
+
+            //current time
+            time = millis()
+
+            //difference in milliseconds between current time and when the last fruit was generated
+            if (time - lastGenerated >= interval) {
+                //the time that the last fruit was generated
+                lastGenerated = millis()
+                //show the generated fruit
+                createFruit()
+            }
+
+            imageMode(CENTER)
+
+            //checks if the array is not empty
+            if (generatedFruit.length > 0) {
+                //loop that iterates over each element in the generated fruit array
+                for (let i = 0; i < generatedFruit.length; i++) {
+                    //drops the randomly generated fruit at the set speed
+                    generatedFruit[i].drop(speedFactor)
+                    //show the generated fruit to the screen
+                    generatedFruit[i].show()
+
+                    //if the fruit collides with the blue player, it removes the fruit from the array
+                    if (generatedFruit[i].playerGoal == "left") {
+                        if (generatedFruit[i].detectHit(xb, yb, 200, 200) == true) {
+                            //remove the randomly generated fruit from array
+                            generatedFruit.splice(i, 1)
+                        }
+                    }
+                    //if the fruit collides with the red player, it removes the fruit from the array
+                    else if (generatedFruit[i].playerGoal == "right") {
+                        if (generatedFruit[i].detectHit(xr, yr, 200, 200) == true) {
+                            //remove the randomly generated fruit from array
+                            generatedFruit.splice(i, 1)
+                        }
+                    }
+
+
+                }
+            }
+
+
+            //blue players movements with WASD
+            if (keyIsDown(65) && xb >= 0) {
+                xb -= 8;
+            }
+
+            if (keyIsDown(68) && xb <= w / 2.5 - 100) {
+                xb += 8;
+            }
+
+
+
+            //red players movements with IJKL
+            if (keyIsDown(74) && xr >= w / 1.8) {
+                xr -= 8;
+            }
+
+            if (keyIsDown(76) && xr <= w - 190) {
+                xr += 8;
+            }
+
+
+            imageMode(CORNER)
+            //load the images and its dimensions as well as how it moves with the set keys
+            image(blueplayer, xb, yb, 150, 150)
+            image(redplayer, xr, yr, 150, 150)
+
+            fruitSFX.setVolume(0.5)
+        }
+
+
+    </script>
+</body>
+
+</html>

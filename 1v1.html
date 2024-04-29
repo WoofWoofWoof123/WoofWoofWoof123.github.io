@@ -1,0 +1,371 @@
+<html>
+
+<head>
+    <title>Quarter 3-4 Game Project</title>
+    <link rel="stylesheet" href="3-4game.css" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"
+        integrity="sha512-uaz5GpnQoE6t5echKlX8P52czvsIGgLPcvlzfvRubLZ1Hp8JemUDnbUiAahbVtPb+jUVrNETuXvAhDDF/N3M4w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Includes the p5.collide2D addon library -->
+    <script defer src="https://unpkg.com/p5.collide2d"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Concert+One&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.js" integrity="sha512-TU9AWtV5uUZPX8dbBAH8NQF1tSdigPRRT82vllAQ1Ke28puiqLA6ZVKxtUGlgrH6yWFnkKy+sE6luNEGH9ar0A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+</head>
+
+<body>
+
+   
+    <!--Game Instructions-->
+    <div id="startup">
+        <h1 id="onevone-title">1V1 BATTLE</h1>
+        <p id = "pong-instructions">In 1v1 battle, you compete with your opponent and try to get them down to 0 HP. Every time a player is reduced to 0 HP, the opponent scores a point.</p>
+        <p id = "blue-instructions">Blue Player:<br>🆆 = Jump<br><mark  id="A" style="background: blue">Ａ</mark> = Left<br>🆂 = ATTACK!<br>🅳  = Right</p>
+        <p id = "hockeyR-instructions">Red Player:<br>🅸 = Jump<br>🅹 = Left<br>🅺 = ATTACK!<br>🅻 = Right</p>
+        <p id = "reset">🅁 = Reset Score</p>
+        <h2 id="clickspace">(Click Space To Continue)</h2>
+    </div>
+
+
+
+    <!--drop down box for user to select the game they would like to play-->
+    <div id="topbar">
+        <p id="gameselect">Game Options</p>
+        <select id="dropgames">
+            <option value="homepage">HOME PAGE</option>
+            <option value="pong">Pong</option>
+            <option value="hockey">Hockey</option>
+            <option value="1v1">1v1 Battle</option>
+            <option value="fruit">Catch the Fruit</option>
+        </select>
+        <!--button that will direct users to the game they chose-->
+        <button id="letsgo" onclick="letsgobut()">Lets Go!</button>
+    </div>
+
+    <!--Placeholder that displays the red and blue players HP-->
+    <p id="blueHPplacehold"> Red HP: 100</p>
+    <p id="redHPplacehold">Blue HP: 100</p>
+
+    <!--Placeholder that displays the red and blue players scores-->
+    <p id="blueScorePlaceholder">0</p>
+    <p id="redScorePlaceholder">0</p>
+
+    
+    
+    <script>
+        //height and width of the page
+        let w = window.innerWidth
+        let h = window.innerHeight
+
+        //blue players starting position
+        let xb = 110
+        let yb = 550
+
+        //red players starting position
+        let xr = 1190
+        let yr = 550
+
+        //declare the unknown variables
+        let player
+        let blueplayer
+        let redplayer
+
+        //blue and red players set HP
+        let blueHP = 100
+        let redHP = 100
+
+        //blue and red players set scores
+        let blueScore = 0
+        let redScore = 0
+
+        //variable that states that the players are not colliding 
+        var hit = false;
+
+
+
+        //function that directs the users to the game they chose
+        function letsgobut() {
+            //get the values within the dropdown box
+            let dropDownValue = document.getElementById("dropgames").value
+            if (dropDownValue == "homepage") {
+                window.location.href = "index.html"
+            }
+
+            if (dropDownValue == "pong") {
+                window.location.href = "pong.html"
+            }
+
+            if (dropDownValue == "hockey") {
+                window.location.href = "hockey.html"
+            }
+
+            if (dropDownValue == "1v1") {
+                window.location.href = "1v1.html"
+            }
+
+            if (dropDownValue == "fruit") {
+                window.location.href = "fruit.html"
+            }
+
+
+        }
+
+
+        function preload() {
+            //preload background image
+            bg = loadImage('colosseum.jpg')
+
+            //preload the players characters
+            blueplayer = loadImage('blue1v1.png')
+            redplayer = loadImage('red1v1.png')
+
+            //preload the hit and miss sound effects
+            missSFX = loadSound('miss1v1.mp3')
+            hitSFX = loadSound('hit1v1.mp3')
+        }
+
+
+
+        function setup() {
+            createCanvas(w, h)
+            //declare the variable as a new object
+            jumpingB = new jumper1()
+            jumpingR = new jumper2()        
+        }
+
+
+        function keyPressed() {
+            if (keyCode === (32)) {
+                //remove the startup title page from the body of the document
+                document.body.removeChild(document.getElementById('startup'))
+            }
+
+            //when player presses R key, reset both players scores and HP
+            if (key == 'r') {
+                //reset the scores
+                blueScore = 0
+                redScore = 0
+                //display that the scores have been reset
+                document.getElementById('blueScorePlaceholder').innerHTML = blueScore
+                document.getElementById('redScorePlaceholder').innerHTML = redScore
+
+                //reset the HPs
+                blueHP = 100
+                redHP = 100
+                //display that the HPs have been reset
+                document.getElementById("redHPplacehold").innerText = "Red HP: " + redHP
+                document.getElementById("blueHPplacehold").innerText = "Blue HP: " + blueHP
+            }
+
+        }
+
+
+       
+
+     
+
+        //function for blue player to jump
+        function jumper1() {
+            this.x = xb
+            this.y = yb
+            //force of gravity
+            this.gravity = 1
+            //opposing force
+            this.lift = -20
+            //velocity
+            this.velocity = 0
+
+
+            this.show = function() {
+                //load the images and its dimensions as well as how it moves with the set keys
+                image(blueplayer, this.x, this.y, 200, 200)
+            }
+
+
+            this.update = function() {
+                //add current velocity to gravity
+                //add current velocity to gravity
+                this.velocity += this.gravity
+
+                //make the ball stop at the bottom of the screen
+                if (this.y >= h - 200) {
+                    this.velocity = 0 
+                }
+
+                //what direction am I traveling
+                this.y += this.velocity
+                //resistance to falling
+                this.velocity *= 0.9
+            }
+
+
+            this.up = function() {
+                    //up
+                    if (keyIsDown(87)) {
+                        this.y += this.lift
+                    }
+
+                    //left and right
+                    if (keyIsDown(65) && xb >= 0) {
+                        this.x -= 10;
+                    }
+                    if (keyIsDown(68) && xb <= w - 100) {
+                        this.x += 10;
+                    }
+                    }
+
+            
+
+        }
+
+
+
+
+        //function for red player to jump
+        function jumper2() {
+            this.x = xr
+            this.y = yr
+            //force of gravity
+            this.gravity = 1
+            //opposing force
+            this.lift = -20
+            //velocity
+            this.velocity = 0
+
+
+            this.show = function() {
+                //load the images and its dimensions as well as how it moves with the set keys
+                image(redplayer, this.x, this.y, 200, 200)
+            }
+
+
+            this.update = function() {
+                //add current velocity to gravity
+                //add current velocity to gravity
+                this.velocity += this.gravity
+
+                //make the ball stop at the bottom of the screen
+                if (this.y >= h - 200) {
+                    this.velocity = 0 
+                }
+
+                //what direction am I traveling
+                this.y += this.velocity
+                //resistance to falling
+                this.velocity *= 0.9
+            }
+
+
+            this.up = function() {
+                    //up
+                    if (keyIsDown(73)) {
+                        this.y += this.lift
+                    }
+
+                    //left and right
+                    if (keyIsDown(74) && xr >= 0) {
+                        this.x -= 10;
+                    }
+                    if (keyIsDown(76) && xr <= w - 100) {
+                        this.x += 10;
+                    }
+
+            }
+
+            
+
+        }
+
+        
+
+
+
+        //function that allows user to move with WASD and IJKL
+        function draw() {
+
+
+            
+            //clear so that there is no image trail when the users move
+            clear()
+            
+    
+            //set the canvas to be the screen width and length
+            createCanvas(window.innerWidth, window.innerHeight)
+
+            //load the background image to the screen
+            background(bg)
+
+            //run the blue players movements 
+            jumpingB.show()
+            jumpingB.update()
+            jumpingB.up()
+
+            //run the red players movements 
+            jumpingR.show()
+            jumpingR.update()
+            jumpingR.up()
+            
+
+            //state that both players collide
+            hit = collideRectRect(jumpingB.x, jumpingB.y, 200, 200, jumpingR.x, jumpingR.y, 200, 200);
+          
+            
+            //if the blue player collides witht he red player and presses S, subtract HP from red player
+            if (hit == true && keyIsDown(83)) {
+                //play sound effect when the blue player hits red
+                hitSFX.play()
+                blueHP--;
+                document.getElementById("blueHPplacehold").innerText = "Red HP: " + blueHP
+            }
+
+            //if the blue player does not collide but hits, play the miss sound effect
+            if (hit == false && keyIsDown(83)) [
+                missSFX.play()
+            ]
+
+
+
+            //if the red player collides witht he blue player and presses K, subtract HP from blue player
+            if (hit == true && keyIsDown(75)) {
+                //play sound effect when the red player hits bue
+                hitSFX.play()
+                redHP--;
+                document.getElementById("redHPplacehold").innerText = "Blue HP: " + redHP
+            }
+
+            //if the red player does not collide but hits, play the miss sound effect
+            if (hit == false && keyIsDown(75)) [
+                missSFX.play()
+            ]
+
+
+
+            //if the blue HP is 0, add a point to the red player and display on screen
+            if (redHP == 0) {
+                redScore+=1;
+                redHP = 100
+                blueHP = 100
+                document.getElementById("redScorePlaceholder").innerText =  redScore
+                document.getElementById("redHPplacehold").innerText = "Red HP: " + redHP
+                document.getElementById("blueHPplacehold").innerText = "Blue HP: " + blueHP
+            }
+
+            //if the red HP is 0, add a point to the blue player and display on screen
+            if (blueHP == 0) {
+                blueScore+=1;
+                blueHP = 100
+                redHP = 100
+                document.getElementById("blueScorePlaceholder").innerText =  blueScore
+                document.getElementById("blueHPplacehold").innerText = "Blue HP: " + blueHP
+                document.getElementById("redHPplacehold").innerText = "Red HP: " + redHP
+
+            }
+
+            
+        }
+    </script>
+</body>
+
+</html>

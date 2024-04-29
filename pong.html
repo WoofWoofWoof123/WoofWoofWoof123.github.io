@@ -1,0 +1,359 @@
+<html>
+
+<head>
+    <title>Quarter 3-4 Game Project</title>
+    <link rel="stylesheet" href="3-4game.css" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"
+        integrity="sha512-uaz5GpnQoE6t5echKlX8P52czvsIGgLPcvlzfvRubLZ1Hp8JemUDnbUiAahbVtPb+jUVrNETuXvAhDDF/N3M4w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Includes the p5.collide2D addon library -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Concert+One&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.js" integrity="sha512-TU9AWtV5uUZPX8dbBAH8NQF1tSdigPRRT82vllAQ1Ke28puiqLA6ZVKxtUGlgrH6yWFnkKy+sE6luNEGH9ar0A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+
+<body>
+
+
+    <div id="startup">
+        <h1 id="pong-title">PONG</h1>
+        <p id = "pong-instructions">The classic game of Pong where two players control their characters on either side of the screen. Use your characters to try and get the ball past your opponent.</p>
+        <p id = "blue-instructions">Blue Player:<br>🆆 = Up<br>🆂 = Down</p>
+        <p id = "red-instructions">Red Player:<br>🅸 = Up<br>🅺 = Down</p>
+        <p id = "reset">🅁 = Reset Score</p>
+        <p id = "startball">🄱 = Start Ball</p>
+        <h2 id="clickspace">(Click Space To Continue)</h2>
+    </div>
+
+
+
+    <!--drop down box for user to select the game they would like to play-->
+    <div id="topbar">
+        <p id="gameselect">Game Options</p>
+        <select id="dropgames">
+            <option value="homepage">HOME PAGE</option>
+            <option value="pong">Pong</option>
+            <option value="hockey">Hockey</option>
+            <option value="1v1">1v1 Battle</option>
+            <option value="fruit">Catch the Fruit</option>
+        </select>
+        <!--button that will direct users to the game they chose-->
+        <button id="letsgo" onclick="letsgobut()">Lets Go!</button>
+    </div>
+
+
+
+    <script>
+
+        //height and width of page
+        let w = window.innerWidth
+        let h = window.innerHeight
+
+        //declare the unknown variables
+        let redPlayerImg
+        let bluePlayerImg
+        let pongsfx
+
+        //posiiton of score
+        let textOffsetX = 200;
+        let textOffsetY = 10;
+
+        
+
+        //function that directs the users to the game they chose
+        function letsgobut() {
+            //get the values within the dropdown box
+            let dropDownValue = document.getElementById("dropgames").value
+            if (dropDownValue == "homepage") {
+                window.location.href = "index.html"
+            }
+
+            if (dropDownValue == "pong") {
+                window.location.href = "pong.html"
+            }
+
+            if (dropDownValue == "hockey") {
+                window.location.href = "hockey.html"
+            }
+
+            if (dropDownValue == "1v1") {
+                window.location.href = "1v1.html"
+            }
+
+            if (dropDownValue == "fruit") {
+                window.location.href = "fruit.html"
+            }
+
+
+        }
+
+
+        
+        function preload() {
+            //preload the character images
+            redPlayerImg = loadImage("redpong.png")
+            bluePlayerImg = loadImage("bluepong.png")
+            
+            //preload the sound effect
+            pongsfx = loadSound('pong.mp3')
+
+        }
+
+
+        function backdrop() {
+            //style of dotted line
+            stroke(80)
+            strokeWeight(8);
+
+            //set the dotted line that divides the screen
+            let dottedLength = 20;
+            let y = dottedLength/2;
+            
+            //while loop that constantly shows the dotted line divider
+            while (y < height) {
+                line(width/2, y, width/2, y + dottedLength);
+                y += dottedLength*2;
+            }
+
+            //style of score
+            textSize(100);
+            noStroke();
+            fill(80);
+
+            //position of blue player score
+            textAlign(RIGHT, TOP);
+            text(p1.score, width/2 - textOffsetX, textOffsetY);
+
+            //position of red player score
+            textAlign(LEFT);
+            text(p2.score, width/2 + textOffsetX, textOffsetY);
+
+        }
+
+
+
+        //create the ball object
+        class Ball {
+    
+            
+            constructor(x, y, r, speed = 10) {
+                this.spawn = createVector(x, y)
+                this.speed = 15;
+                this.r = r;
+                this.resetball();
+            }
+            
+            
+            resetball() {
+                this.pos = this.spawn.copy();
+                let angle = random(-PI/4, PI/4)
+                this.vel = p5.Vector.fromAngle(angle, this.speed);
+                if (random(1) > 0.5) this.vel.x *= -1;
+            }
+
+            outOfBounds() {
+            
+                // If the ball is out of the screen,
+                // return the side, otherwise return false
+                
+                if (this.pos.x > width + this.r)  {
+                    this.resetball();
+                    return 'right';
+                }
+                
+                if (this.pos.x < -this.r) {
+                    this.resetball();
+                    return 'left';
+                }
+                
+                return false;
+            
+            }
+
+        
+            hit(p1, p2) {
+                for (let pad of [p1, p2]) {
+                    let padX  = pad.pos.x;
+                    let padY  = pad.pos.y;
+                    let ballX = ball.pos.x;
+                    let ballY = ball.pos.y;
+                    let r = this.r
+
+                    // if ball collides on x-axis
+                    if ((padX - r) < (ballX) && (ballX) < (padX + pad.w + r)) {
+
+                        // and on y-axis
+                        if ((padY - r) < ballY && ballY < (padY + pad.h + r)) {
+
+
+                            pongsfx.play()
+
+
+                            // ball collided
+                            let padCenter = createVector(pad.pos.x, pad.pos.y + pad.h/2)
+
+                            // Vector from center of pad to center of ball
+                            this.vel = this.pos.copy().sub(padCenter);
+                            this.vel.limit(10);
+                            
+                            // basically halve that angle so it points more to the center
+                            let a = this.vel.heading();
+                            if (a > -PI/2 && a < PI/2) {
+                                this.vel = p5.Vector.fromAngle(a/2, 15);
+                            } else {
+                                this.vel.rotate(PI);
+                                let a = this.vel.heading();
+                                this.vel = p5.Vector.fromAngle(PI + a/2, 15);
+                            }
+
+                        }
+                    }
+                }
+            }
+            
+            update() {
+                this.pos.add(this.vel);
+                
+                // bounce off top and bottom walls
+                if (this.pos.y + this.r >= height || this.pos.y - this.r <= 0) {
+                    this.pos.y = constrain(this.pos.y, this.r, height - this.r);
+                    this.vel.y *= -1;
+
+                    pongsfx.play()
+                }
+                
+            }
+
+            show() {
+                fill(255);
+                noStroke();
+                ellipse(this.pos.x, this.pos.y, this.r*2);
+            }
+
+            
+
+        }
+
+
+
+        class Paddle {
+
+            constructor(x, y, w, h) {
+                this.pos = createVector(x, y);
+                this.w = 200;
+                this.h = 150;
+                this.score = 0;
+            }
+
+            move(amt) {
+                this.pos.y += amt;
+                this.pos.y = constrain(this.pos.y, 10, height - 10 - this.h);
+            }
+
+            show(imageThing) {
+                noStroke();
+                fill(255);
+                image(imageThing, this.pos.x, this.pos.y, 200, 200);
+            }
+                
+
+        }
+
+
+        let ball, p1, p2, retroFont;
+        let go = false;
+
+
+
+        function setup() {
+        
+
+            createCanvas(w, h)
+            ball = new Ball(width/2, height/2, 10, 10);
+
+            p1 = new Paddle(20, height/2 - 50, 10, 100);
+            p2 = new Paddle(width - 200, height/2 - 50, 10, 100);
+        }
+
+
+        function draw() {
+            background(52);
+            backdrop();
+
+            
+
+
+            movePaddles();
+            p1.show(bluePlayerImg);
+            p2.show(redPlayerImg);
+
+            let oob = ball.outOfBounds();
+            if (oob) {
+                // the ball stays at spawn till go = true
+                go = false;
+                if (oob == 'right') {
+                    p1.score++;
+                } else {
+                    p2.score++
+                }
+            }
+
+            if (go) ball.update();
+
+            ball.hit(p1, p2);
+
+            ball.show()
+            
+            pongsfx.setVolume(0.5)
+        }
+
+
+        function movePaddles() {
+            // 65 = 'a'
+            if (keyIsDown(87)) {
+                p1.move(-7);
+            }
+            
+            // 90 = 'z'
+            if (keyIsDown(83)) {
+                p1.move(7);
+            }
+            
+            // 75 = 'k'
+            if (keyIsDown(73)) {
+                p2.move(-7);
+            }
+            
+            // 77 = 'm'
+            if (keyIsDown(75)) {
+                p2.move(7);
+            }
+        }
+
+        function keyTyped() {
+
+            if (keyCode === (32)) {
+                //remove the startup title page from the body of the document
+                document.body.removeChild(document.getElementById('startup'))
+                
+            }
+
+            if (key == 'b') {
+                go = true;
+            }
+
+            if (key == 'r') {
+                p1.score = 0;
+                p2.score = 0;
+                ball.resetball();
+                go = false;
+            }
+
+            // for safety
+            return false;
+        }
+    </script>
+</body>
+
+</html>
