@@ -289,9 +289,9 @@
                 this.pos.y = constrain(this.pos.y, 10, height - 10 - this.h);
             }
 
-            
             show(imageThing) {
-                //set the original paddle (behind the character image)
+                noStroke();
+                fill(255);
                 image(imageThing, this.pos.x, this.pos.y, 200, 200);
             }
                 
@@ -299,21 +299,22 @@
         }
 
 
-        //declare the unknwon variables
+        //declare unknown variables
         let ball, p1, p2, retroFont;
-        //if 'b' is not pressed, go = false
+        //if the player does not press b, go = false
         let go = false;
 
 
 
         function setup() {
-            //set canvas of screen
+        
+            //create canvas
             createCanvas(w, h)
 
-            //set ball to the middle of the screen
+            //set ball position
             ball = new Ball(width/2, height/2, 10, 10);
 
-            //set each paddle to their sides of the screen
+            //player positions
             p1 = new Paddle(20, height/2 - 50, 10, 100);
             p2 = new Paddle(width - 200, height/2 - 50, 10, 100);
         }
@@ -321,40 +322,39 @@
 
         function draw() {
 
-            //background
+            //background style
             background(52);
- 
-            //show the paddle movement function
+            backdrop();
+
+            //paddle movement function
             movePaddles();
 
-            //show the paddles as the character images
+            //show the paddles as player images
             p1.show(bluePlayerImg);
             p2.show(redPlayerImg);
 
-            // ball out of bounds
+            //ball out of bounds
             let oob = ball.outOfBounds();
-
-            //if the ball is out of bound
             if (oob) {
                 // the ball stays at spawn till go = true
+                //game has started
                 go = false;
-                //if the ball goes out of bounds on the right side
                 if (oob == 'right') {
-                    //add score to blue
+                    //add score to blue player when it goes out on right side
                     p1.score++;
                 }
                 else {
-                    //add score to red
+                    //add score to red player when it goes out on left side
                     p2.score++
                 }
             }
 
-            //start ball movement when player starts
+            //show the ball and players
             if (go) ball.update();
             ball.hit(p1, p2);
             ball.show()
             
-            //pong sound effect 
+            //pong sound effect volumet
             pongsfx.setVolume(0.5)
         }
 
@@ -382,18 +382,19 @@
         }
 
         function keyTyped() {
+
             if (keyCode === (32)) {
                 //remove the startup title page from the body of the document
                 document.body.removeChild(document.getElementById('startup'))
                 
             }
 
-            //when b is pressed, start the ball movement
+            //if player presses b, game starts
             if (key == 'b') {
                 go = true;
             }
 
-            //if r is pressed, reset each players score
+            //if player presses r, reset scores
             if (key == 'r') {
                 p1.score = 0;
                 p2.score = 0;
