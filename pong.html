@@ -133,30 +133,38 @@
 
 
 
-        //create the ball object
+        //create the ball
         class Ball {
     
-            
+            //define the parameter
             constructor(x, y, r, speed = 10) {
+                //set spawn position
                 this.spawn = createVector(x, y)
+                //set speed
                 this.speed = 15;
+                //radius of ball
                 this.r = r;
+                //rest ball position and velocity
                 this.resetball();
             }
             
-            
+            //reset ball position and velocity
             resetball() {
+                //reset the ball position to spawn position
                 this.pos = this.spawn.copy();
+                //generate random angle 
                 let angle = random(-PI/4, PI/4)
+                //create velocity vector with the random angle and fixed speed
                 this.vel = p5.Vector.fromAngle(angle, this.speed);
+                //randomly reverse the x componenet velocity
                 if (random(1) > 0.5) this.vel.x *= -1;
             }
 
+
+            //chekcs if the ball is out of bounds
             outOfBounds() {
-            
                 // If the ball is out of the screen,
                 // return the side, otherwise return false
-                
                 if (this.pos.x > width + this.r)  {
                     this.resetball();
                     return 'right';
@@ -168,42 +176,58 @@
                 }
                 
                 return false;
-            
             }
 
         
+            //check if ball collides with the blue and red player
             hit(p1, p2) {
                 for (let pad of [p1, p2]) {
+                    //players paddle position x
                     let padX  = pad.pos.x;
+                    //players paddle position y
                     let padY  = pad.pos.y;
+
+                    //ball position x
                     let ballX = ball.pos.x;
+                    //ball position y
                     let ballY = ball.pos.y;
+
+                    //radius of ball
                     let r = this.r
 
                     // if ball collides on x-axis
                     if ((padX - r) < (ballX) && (ballX) < (padX + pad.w + r)) {
 
-                        // and on y-axis
+                        //and if ball collides on y-axis
                         if ((padY - r) < ballY && ballY < (padY + pad.h + r)) {
 
-
+                            //play the pong sound effect
                             pongsfx.play()
-
 
                             // ball collided
                             let padCenter = createVector(pad.pos.x, pad.pos.y + pad.h/2)
 
                             // Vector from center of pad to center of ball
+                            // Set the velocity vector towards the center of the paddle
                             this.vel = this.pos.copy().sub(padCenter);
+                            // Limit the velocity to 10
                             this.vel.limit(10);
                             
-                            // basically halve that angle so it points more to the center
+                            //half that angle so it points more to the center
+                            //Get the angle of the velocity vector
                             let a = this.vel.heading();
+
+                            //If the angle is within a certain range, adjust the velocity angle
                             if (a > -PI/2 && a < PI/2) {
                                 this.vel = p5.Vector.fromAngle(a/2, 15);
-                            } else {
+                            } 
+                            
+                            else {
+                                //rotate the velocity vector by pi
                                 this.vel.rotate(PI);
+                                //get angle of velocity vector after rotation
                                 let a = this.vel.heading();
+                                //adjust velocity angle after rotation
                                 this.vel = p5.Vector.fromAngle(PI + a/2, 15);
                             }
 
@@ -212,22 +236,31 @@
                 }
             }
             
+
+
             update() {
+                //update ball position based on velocity
                 this.pos.add(this.vel);
                 
                 // bounce off top and bottom walls
                 if (this.pos.y + this.r >= height || this.pos.y - this.r <= 0) {
+                    //keeps ball within canvas
                     this.pos.y = constrain(this.pos.y, this.r, height - this.r);
+                    //reverse y of velocity
                     this.vel.y *= -1;
 
+                    //play sound effect for wall bounce
                     pongsfx.play()
                 }
-                
             }
 
+
             show() {
+                //fill color of ball = white
                 fill(255);
+                //disable stroke
                 noStroke();
+                //draw the ball at set position
                 ellipse(this.pos.x, this.pos.y, this.r*2);
             }
 
@@ -236,24 +269,29 @@
         }
 
 
-
+        //Create the paddle
         class Paddle {
-
             constructor(x, y, w, h) {
+                //Create a vector for the paddle's position
                 this.pos = createVector(x, y);
+                //width of paddle
                 this.w = 200;
+                //height of paddle
                 this.h = 150;
+                //set score = 0
                 this.score = 0;
             }
 
             move(amt) {
+                //move the paddle vertically
                 this.pos.y += amt;
+                //constrain paddles y position
                 this.pos.y = constrain(this.pos.y, 10, height - 10 - this.h);
             }
 
+            
             show(imageThing) {
-                noStroke();
-                fill(255);
+                //set the original paddle (behind the character image)
                 image(imageThing, this.pos.x, this.pos.y, 200, 200);
             }
                 
@@ -261,50 +299,62 @@
         }
 
 
+        //declare the unknwon variables
         let ball, p1, p2, retroFont;
+        //if 'b' is not pressed, go = false
         let go = false;
 
 
 
         function setup() {
-        
-
+            //set canvas of screen
             createCanvas(w, h)
+
+            //set ball to the middle of the screen
             ball = new Ball(width/2, height/2, 10, 10);
 
+            //set each paddle to their sides of the screen
             p1 = new Paddle(20, height/2 - 50, 10, 100);
             p2 = new Paddle(width - 200, height/2 - 50, 10, 100);
         }
 
 
         function draw() {
+
+            //background
             background(52);
-            backdrop();
-
-            
-
-
+ 
+            //show the paddle movement function
             movePaddles();
+
+            //show the paddles as the character images
             p1.show(bluePlayerImg);
             p2.show(redPlayerImg);
 
+            // ball out of bounds
             let oob = ball.outOfBounds();
+
+            //if the ball is out of bound
             if (oob) {
                 // the ball stays at spawn till go = true
                 go = false;
+                //if the ball goes out of bounds on the right side
                 if (oob == 'right') {
+                    //add score to blue
                     p1.score++;
-                } else {
+                }
+                else {
+                    //add score to red
                     p2.score++
                 }
             }
 
+            //start ball movement when player starts
             if (go) ball.update();
-
             ball.hit(p1, p2);
-
             ball.show()
             
+            //pong sound effect 
             pongsfx.setVolume(0.5)
         }
 
@@ -332,17 +382,18 @@
         }
 
         function keyTyped() {
-
             if (keyCode === (32)) {
                 //remove the startup title page from the body of the document
                 document.body.removeChild(document.getElementById('startup'))
                 
             }
 
+            //when b is pressed, start the ball movement
             if (key == 'b') {
                 go = true;
             }
 
+            //if r is pressed, reset each players score
             if (key == 'r') {
                 p1.score = 0;
                 p2.score = 0;
@@ -350,7 +401,6 @@
                 go = false;
             }
 
-            // for safety
             return false;
         }
     </script>
