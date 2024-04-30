@@ -53,18 +53,24 @@
 
     <script>
 
+        //height and width of page
         let w = window.innerWidth
         let h = window.innerHeight
 
+        //declare the unknown variables
         let redPlayerImg
         let bluePlayerImg
+        let hockeySFX
+        let bg
+
+        //position of score
         let textOffsetX = 200;
         let textOffsetY = 10;
 
 
 
 
-
+        //function that clears out the startup page when space is pressed
         function keyPressed() {
             if (keyCode === (32)) {
                 //remove the startup title page from the body of the document
@@ -104,66 +110,84 @@
         }
 
 
-        let bg
+
 
         function preload() {
+            //preload character images
             redPlayerImg = loadImage("redhockey.png")
             bluePlayerImg = loadImage("bluehockey.png")
 
+            //preload background image
             bg = loadImage('hockeybg.png')
 
+            //preload sound effect
             hockeySFX = loadSound('hockey.mp3')
 
         }
 
+
+
         function backdrop() {
+            //style of center line
             strokeWeight(8);
 
+            //set the center line that divides the screen
             let dottedLength = 20;
-
             let y = dottedLength/2;
             
+            //while loop that constantly shows the line divider
             while (y < height) {
                 line(width/2, y, width/2, y + dottedLength);
                 y += dottedLength*2;
             }
 
+            //style of score
             textSize(100);
             noStroke();
             fill(0);
 
+            //position of blue player score
             textAlign(RIGHT, TOP);
             text(p1.score, width/2 - textOffsetX, textOffsetY);
 
+            //position of red player score
             textAlign(LEFT);
             text(p2.score, width/2 + textOffsetX, textOffsetY);
 
         }
 
 
-
+        //create the ball
         class Ball {
     
+            //define the parameter
             constructor(x, y, r, speed = 10) {
+                //set spawn position
                 this.spawn = createVector(x, y)
+                //set speed
                 this.speed = 5;
+                //set radius of ball
                 this.r = r;
+                //reset ball position and velocity
                 this.resetball();
             }
             
-            
+            //reset ball position and velocity
             resetball() {
+                //reset the ball position to spawn position
                 this.pos = this.spawn.copy();
+                //generate random angle
                 let angle = random(-PI/4, PI/4)
+                //create velocity vector with the random angle and fixed speed
                 this.vel = p5.Vector.fromAngle(angle, this.speed);
+                //randomly reverse the x component velocity
                 if (random(1) > 0.5) this.vel.x *= -1;
             }
 
+            //checks if the ball is out of bounds
             outOfBounds() {
-            
                 // If the ball is out of the screen,
                 // return the side, otherwise return false
-                
                 if (this.pos.x > width + this.r)  {
                     this.resetball();
                     return 'right';
@@ -179,12 +203,20 @@
             }
 
         
+            //checks if ball collides witht he blue and red player
             hit(p1, p2) {
                 for (let pad of [p1, p2]) {
+                    //players paddle position x
                     let padX  = pad.pos.x;
+                    //players paddle position y
                     let padY  = pad.pos.y;
+
+                    //ball position x
                     let ballX = ball.pos.x;
+                    //ball position y
                     let ballY = ball.pos.y;
+
+                    //radius of ball
                     let r = this.r
 
                     // if ball collides on x-axis
@@ -192,25 +224,34 @@
                         // and on y-axis
                         if ((padY - r) < ballY && ballY < (padY + pad.h + r)) {
 
-
+                            //play the hockey sound effect
                             hockeySFX.play()
 
-
                             // ball collided
-
                             let padCenter = createVector(pad.pos.x, pad.pos.y + pad.h/2)
 
                             // Vector from center of pad to center of ball
+                            //set the velocity vector towards the center of the paddle
                             this.vel = this.pos.copy().sub(padCenter);
+                            //limit the velocity to 10
                             this.vel.limit(10);
                             
-                            // basically halve that angle so it points more to the center
+
+                            //half that angle so it points more to the center
+                            //get angle of the velocity vector
                             let a = this.vel.heading();
+
+                            //if the angle is within a cetain range, adjust the velocity angle
                             if (a > -PI/2 && a < PI/2) {
                                 this.vel = p5.Vector.fromAngle(a/2, 5);
-                            } else {
+                            } 
+                            
+                            else {
+                                //rotate the velocity vector by pi
                                 this.vel.rotate(PI);
+                                //get angle of velocity vector after rotation
                                 let a = this.vel.heading();
+                                //adjust velocity angle after rotation
                                 this.vel = p5.Vector.fromAngle(PI + a/2, 5);
                             }
 
@@ -219,22 +260,32 @@
                 }
             }
             
+
+
+
             update() {
+                //update ball position based on velocity
                 this.pos.add(this.vel);
                 
                 // bounce off top and bottom walls
                 if (this.pos.y + this.r >= height || this.pos.y - this.r <= 0) {
+                    //keeps ball within canvas
                     this.pos.y = constrain(this.pos.y, this.r, height - this.r);
+                    //reverse y of velocity
                     this.vel.y *= -1;
 
+                    //play sound effect for wall bounce
                     hockeySFX.play()
                 }
                 
             }
 
             show() {
+                //fill color of ball = black
                 fill(0);
+                //disable stroke
                 noStroke();
+                //draw the ball at set position
                 ellipse(this.pos.x, this.pos.y, this.r*2);
             }
 
@@ -244,32 +295,43 @@
 
 
 
+        //create the paddle
         class Paddle {
 
             constructor(x, y, w, h) {
+                //create a vector for the paddles position
                 this.pos = createVector(x, y);
+                //width of paddle
                 this.w = 200;
+                //height of paddle
                 this.h = 200;
+                //set score = 0
                 this.score = 0;
             }
 
             move(amt, axis, team) {
+                //move paddle vertically
                 if (axis == "y") {
                     this.pos.y += amt;
                 }
+                
+                //move paddle horizontally
                 if (axis == "x") {
                     this.pos.x += amt;
                     
                 }
                 
+                //constrain paddles x position based on the blue player
                 if (team == "blue") {
                     this.pos.x = constrain(this.pos.x, 0, window.innerWidth)
                 }
+
+                //constrain paddles x position based on the blue player
                 else if (team == "red") {
                     this.pos.x = constrain(this.pos.x, 0, window.innerWidth)
                 }
 
-    
+                //constrain paddles y position within canvas
                 this.pos.y = constrain(this.pos.y, 0, height - 10 - this.h);
             }
 
@@ -283,16 +345,22 @@
         }
 
 
+        //declare unknown varaibles
         let ball, p1, p2, retroFont;
+        //if the player does not press b, go = false
         let go = false;
 
 
 
         function setup() {
 
+            //create canvas
             createCanvas(w, h)
+            
+            //set ball position
             ball = new Ball(width/2, height/2, 10, 10);
 
+            //player position
             p1 = new Paddle(20, height/2 - 50, 10, 100);
             p2 = new Paddle(width - 200, height/2 - 50, 10, 100);
 
@@ -302,35 +370,39 @@
 
         function draw() {
 
-
+            //background style
             background(bg)
-
-
             backdrop();
 
-            
-
+            //paddle movement function
             movePaddles();
+
+            //show the paddles as player images
             p1.show(bluePlayerImg);
             p2.show(redPlayerImg);
 
+            //ball out of bounds
             let oob = ball.outOfBounds();
             if (oob) {
                 // the ball stays at spawn till go = true
+                //game has started
                 go = false;
                 if (oob == 'right') {
+                    //add score to blue player when it goes out on right side
                     p1.score++;
-                } else {
+                } 
+                else {
+                    //add score to red player when it goes out on left side
                     p2.score++
                 }
             }
 
+            //show the ball and players
             if (go) ball.update();
-
             ball.hit(p1, p2);
-
             ball.show()
 
+            //hockey sound effect volume
             hockeySFX.setVolume(0.5)
     
         }
@@ -338,6 +410,7 @@
 
         function movePaddles() {
 
+            //blue player movements
             // 87 = 'w'
             if (keyIsDown(87)) {
                 p1.move(-7, "y", "blue");
@@ -360,7 +433,7 @@
             
 
 
-
+            //red player movements
             // 75 = 'i'
             if (keyIsDown(73)) {
                 p2.move(-7, "y", "red");
@@ -384,10 +457,13 @@
         }
 
         function keyTyped() {
+
+            //if player presses b, game starts
             if (key == 'b') {
                 go = true;
             }
 
+            //if player presses r, reset score
             if (key == 'r') {
                 p1.score = 0;
                 p2.score = 0;
@@ -395,7 +471,6 @@
                 go = false;
             }
 
-            // for safety
             return false;
         }
     </script>
